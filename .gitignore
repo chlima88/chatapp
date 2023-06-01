@@ -2,6 +2,7 @@
 
 #Custom
 chatapp-cred.json
+/.env
 
 # dependencies
 /node_modules
