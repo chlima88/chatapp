@@ -1,12 +1,31 @@
 "use client";
+import { redirect, useRouter } from "next/navigation";
 import { Icon } from "@iconify/react";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { signOut } from "firebase/auth";
 import { CircularProgress } from "@mui/material";
-import { redirect } from "next/navigation";
+import { useAuthState } from "react-firebase-hooks/auth";
+import {
+  useDocument,
+  useDocumentData,
+  useDocumentOnce,
+  useCollectionData,
+} from "react-firebase-hooks/firestore";
+import { signOut } from "firebase/auth";
+import { doc, getDoc, collection, query } from "firebase/firestore";
 
-import { auth } from "@/lib/db";
-import ConversationList from "./components/ConversationList";
+import { firebasedb as db, auth } from "@/lib/db";
+import ConversationList from "@/components/ConversationList";
+import { Dispatch, SetStateAction, useContext } from "react";
+import { UserContext } from "@/context/UserContext";
+
+interface CurrentUser {
+  uid: string;
+  name: string;
+  email: string;
+}
+interface ICurrentUserContext {
+  currentUser: CurrentUser;
+  setCurrentUser: Dispatch<SetStateAction<CurrentUser>>;
+}
 
 export default function RootLayout({
   children,
@@ -14,7 +33,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   const [user, loading, error] = useAuthState(auth);
-  console.log(user);
+  if (!user) redirect("/login");
+
+  const router = useRouter();
+  const { currentUser, setCurrentUser } =
+    useContext<ICurrentUserContext>(UserContext);
+
+  const [snapshot] = useDocument(doc(db, "users", currentUser?.uid as string));
 
   function handleLogOut(): void {
     signOut(auth);
@@ -25,7 +50,7 @@ export default function RootLayout({
       Loading...
       <CircularProgress />
     </div>
-  ) : user ? (
+  ) : (
     <div className="flex flex-row ">
       <div className="h-screen">
         <div className="w-96 h-screen">
@@ -35,7 +60,7 @@ export default function RootLayout({
                 <div>
                   <Icon icon="radix-icons:avatar" width="50" height="50" />
                 </div>
-                <div className="font-bold">Charles Lima</div>
+                <div className="font-bold">{snapshot?.data()?.name}</div>
               </div>
               <button
                 className="flex items-center gap-1"
@@ -58,7 +83,5 @@ export default function RootLayout({
       </div>
       <div className="w-full h-screen">{children}</div>
     </div>
-  ) : (
-    redirect("/login")
   );
 }

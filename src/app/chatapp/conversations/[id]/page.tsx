@@ -152,7 +152,7 @@ export default function Page({ params }: { params: IParams }) {
           value={inputText}
         ></textarea>
         <button
-          className="bg-sky-500 text-white font-semibold w-48 rounded-md hover:bg-sky-500/80"
+          className="bg-violet-500 text-white font-semibold w-48 rounded-md hover:bg-violet-500/80"
           type="submit"
         >
           Send
