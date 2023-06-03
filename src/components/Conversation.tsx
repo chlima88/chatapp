@@ -4,12 +4,12 @@ import Link from "next/link";
 
 interface IProps {
   email: string;
-  id?: string;
+  uid: string;
 }
 
-export default function Conversation({ email, id = "" }: IProps) {
+export default function Conversation({ email, uid }: IProps) {
   return (
-    <Link href={`chatapp/conversations/${id}`}>
+    <Link href={`chatapp/conversations/${uid}`}>
       <div className="flex flex-row items-center justify-between p-2 hover:bg-sky-100 hover:cursor-pointer">
         <div className="flex flex-row  gap-2">
           <div className="text-slate-100 bg-slate-500 rounded-full">

@@ -1,10 +1,11 @@
 "use client";
-import { FormEvent, useState } from "react";
+import { FormEvent, useContext, useState } from "react";
 import { Icon } from "@iconify/react";
 import {
   useCollectionData,
   useCollection,
   useDocument,
+  useDocumentData,
 } from "react-firebase-hooks/firestore";
 import {
   collection,
@@ -13,48 +14,61 @@ import {
   query,
   where,
   orderBy,
+  doc,
+  DocumentReference,
+  DocumentData,
+  getDoc,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
+import { UserContext } from "@/context/UserContext";
 
 interface IParams {
-  id: string;
+  uid: string;
 }
 
 interface IConversation {
-  id: string;
+  uid: string;
   participants: string[];
   created_at: string;
-  users: any[];
+  users: DocumentReference<DocumentData>[];
 }
 
 export default function Page({ params }: { params: IParams }) {
+  const { currentUser } = useContext(UserContext);
   const [inputText, setInputText] = useState("");
 
-  const { id } = params;
+  const { uid } = params;
 
   const q = query(
-    collection(firebasedb, `conversations/${id}/messages`),
+    collection(firebasedb, `conversations/${uid}/messages`),
     orderBy("timestamp")
   );
-  const [messages] = useCollectionData(q);
+  const [messagesSnapshot] = useCollection(q);
+  const messages = messagesSnapshot?.docs.map((doc) => doc.data());
 
-  const [snapshot, loading, error] = useCollection(
+  const [conversationsSnapshot, loading, error] = useCollection(
     collection(firebasedb, "conversations")
   );
-  const conversation = snapshot?.docs
-    .map((doc) => ({ id: doc.id, ...doc.data() } as IConversation))
-    .find((conversation) => conversation.id === id);
+  const conversation = conversationsSnapshot?.docs
+    .map((doc) => ({ uid: doc.id, ...doc.data() } as IConversation))
+    .find((conversation) => conversation.uid === uid);
 
-  const [userSnapshot] = useDocument(conversation?.users[0]);
+  const currentUserRef = doc(firebasedb, "users", currentUser.uid);
 
-  const contactName = userSnapshot?.get("name");
+  const [userSnapshot] = useDocumentData(
+    conversation?.users.find(
+      (conversationUser) => conversationUser.id != currentUserRef.id
+    )
+  );
+
+  const contactName = userSnapshot?.name;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (inputText === "") return;
-    await addDoc(collection(firebasedb, `conversations/${id}/messages`), {
+    await addDoc(collection(firebasedb, `conversations/${uid}/messages`), {
       text: inputText,
-      sender: "clima@google.com",
+      sender: currentUser.email,
       timestamp: serverTimestamp(),
     });
     setInputText("");
