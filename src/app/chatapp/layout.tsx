@@ -16,11 +16,13 @@ import { firebasedb as db, auth } from "@/lib/db";
 import ConversationList from "@/components/ConversationList";
 import { Dispatch, SetStateAction, useContext } from "react";
 import { UserContext } from "@/context/UserContext";
+import Loading from "@/components/Loading";
 
 interface CurrentUser {
   uid: string;
   name: string;
   email: string;
+  firstLogin: boolean;
 }
 interface ICurrentUserContext {
   currentUser: CurrentUser;
@@ -46,10 +48,7 @@ export default function RootLayout({
   }
 
   return loading ? (
-    <div className="flex flex-col items-center absolute top-1/2 left-1/2 translate-x-1/2">
-      Loading...
-      <CircularProgress />
-    </div>
+    <Loading />
   ) : (
     <div className="flex flex-row ">
       <div className="h-screen">

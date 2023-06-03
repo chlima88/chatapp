@@ -5,6 +5,7 @@ interface CurrentUser {
   uid: string;
   name: string;
   email: string;
+  firstLogin: boolean;
 }
 
 interface ICurrentUserContext {

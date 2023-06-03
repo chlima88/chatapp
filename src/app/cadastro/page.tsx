@@ -3,19 +3,11 @@
 import { FormEvent, useContext, useEffect, useState } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
+import { getDoc, updateDoc, setDoc, doc } from "firebase/firestore";
+
 import { auth, firebasedb } from "@/lib/db";
-import {
-  CollectionReference,
-  DocumentData,
-  Firestore,
-  addDoc,
-  collection,
-  getDoc,
-  updateDoc,
-  setDoc,
-  doc,
-} from "firebase/firestore";
 import { UserContext } from "@/context/UserContext";
+import Loading from "@/components/Loading";
 
 interface User {
   uid: string;
@@ -34,21 +26,29 @@ export default function Page() {
 
   const [foundUser, setFoundUser] = useState({} as User);
 
-  getDoc(doc(firebasedb, "users", user?.uid as string)).then((result) => {
-    setFoundUser({
-      uid: result.id,
-      name: result.data()?.name,
-      email: result.data()?.email,
-      firstLogin: result.data()?.firstLogin,
-    });
-  });
-
   useEffect(() => {
+    setUserName(user?.email?.split("@")[0] ?? "");
+
     setCurrentUser({
       name: user?.email?.split("@")[0],
       email: user?.email,
       uid: user?.uid,
     });
+
+    (async function () {
+      const userData = await getDoc(
+        doc(firebasedb, "users", user?.uid as string)
+      );
+
+      setFoundUser({
+        uid: userData?.id,
+        name: userData?.data()?.name,
+        email: userData?.data()?.email,
+        firstLogin: userData?.data()?.firstLogin ?? true,
+      });
+    })();
+
+    console.log(foundUser);
   }, [user]);
 
   async function handleUser(fn: Function) {
@@ -62,20 +62,24 @@ export default function Page() {
   async function handleSingUp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (userName === "") return;
-    const action = (await foundUser) ? updateDoc : setDoc;
-    const { email, uid } = currentUser;
+    // const action = foundUser.firstLogin ? setDoc : updateDoc ;
+    await setDoc(doc(firebasedb, "users", user?.uid as string), {
+      name: userName,
+      email: currentUser?.email,
+      firstLogin: false,
+    });
+
     setCurrentUser({
       name: userName,
-      email,
-      uid,
+      ...currentUser,
     });
-    handleUser(action);
+    // handleUser(action);
     router.push("/chatapp");
   }
 
-  return !foundUser.firstLogin ? (
-    router.push("/chatapp")
-  ) : (
+  return foundUser.firstLogin == undefined ? (
+    <Loading />
+  ) : foundUser.firstLogin ? (
     <div className="flex w-full items-center justify-center h-screen">
       <form
         className="flex flex-col gap-2 bg-violet-500 p-6"
@@ -102,5 +106,7 @@ export default function Page() {
         <button className="bg-white p-2 rounded-sm font-medium">Save</button>
       </form>
     </div>
+  ) : (
+    router.push("/chatapp")
   );
 }

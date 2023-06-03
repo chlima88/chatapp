@@ -1,16 +1,8 @@
 "use client";
 
 import { redirect } from "next/navigation";
-import { useContext, useEffect } from "react";
-import { UserContext } from "@/context/UserContext";
-import { useAuthState, useSignInWithGoogle } from "react-firebase-hooks/auth";
+import { useSignInWithGoogle } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/db";
-
-interface User {
-  uid: string;
-  name: string;
-  email: string;
-}
 
 export default function Page() {
   const [signInWithGoole, user, loading] = useSignInWithGoogle(auth);
