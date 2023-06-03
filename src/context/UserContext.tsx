@@ -16,9 +16,9 @@ interface ICurrentUserContext {
 const UserContext = createContext({} as ICurrentUserContext);
 
 function UserProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState({
-    name: "chlima",
-  } as CurrentUser);
+  const [currentUser, setCurrentUser] = useState<CurrentUser>(
+    {} as CurrentUser
+  );
 
   return (
     <UserContext.Provider value={{ currentUser, setCurrentUser }}>
