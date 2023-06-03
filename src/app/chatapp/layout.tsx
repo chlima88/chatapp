@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/db";
 import Loading from "@/components/Loading";
-import Sidebar from "@/components/sidebar";
+import Sidebar from "@/components/Sidebar";
 
 export default function RootLayout({
   children,
