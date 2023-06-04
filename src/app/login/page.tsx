@@ -8,7 +8,7 @@ export default function Page() {
   const [signInWithGoole, user, loading] = useSignInWithGoogle(auth);
 
   async function handleSignIn() {
-    await signInWithGoole();
+    await signInWithGoole([], { prompt: "select_account" });
   }
 
   return user ? (
