@@ -112,7 +112,7 @@ export default function Page({ params }: { params: IParams }) {
       unit = "minute";
     }
 
-    return rtf.format(difference, unit);
+    return rtf.format(difference, unit as Intl.RelativeTimeFormatUnit);
   }
 
   return (
