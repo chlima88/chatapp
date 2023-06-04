@@ -1,9 +1,9 @@
 "use client";
 
-import { FormEvent, useContext, useEffect, useState } from "react";
+import { FormEvent, useContext, useEffect, useRef, useState } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { getDoc, updateDoc, setDoc, doc } from "firebase/firestore";
+import { getDoc, setDoc, doc } from "firebase/firestore";
 
 import { auth, firebasedb } from "@/lib/db";
 import { UserContext } from "@/context/UserContext";
@@ -11,14 +11,17 @@ import Loading from "@/components/Loading";
 
 export default function Page() {
   const router = useRouter();
-  const [user, loading, error] = useAuthState(auth);
-  const [userName, setUserName] = useState("");
+  const [user] = useAuthState(auth);
+  const userNameInput = useRef<HTMLInputElement>(null);
+
+  const userName = useRef("");
   const { currentUser, setCurrentUser } = useContext(UserContext);
 
   if (!user) redirect("/login");
 
   useEffect(() => {
-    setUserName(user?.email?.split("@")[0] ?? "");
+    // setUserName(user?.email?.split("@")[0] ?? "");
+    userName.current = user?.email?.split("@")[0] ?? "";
 
     (async function () {
       const userData = await getDoc(
@@ -34,18 +37,23 @@ export default function Page() {
     })();
   }, [setCurrentUser, user]);
 
+  useEffect(() => {
+    console.log(userNameInput.current);
+    if (userNameInput.current) userNameInput.current!.value = userName.current;
+  }, [currentUser]);
+
   async function handleSingUp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (userName === "") return;
+    if (userName.current === "") return;
     await setDoc(doc(firebasedb, "users", user?.uid as string), {
-      name: userName,
+      name: userName.current,
       email: currentUser?.email,
       firstLogin: false,
     });
 
     setCurrentUser({
       ...currentUser,
-      name: userName,
+      name: userName.current,
     });
     router.push("/chatapp");
   }
@@ -71,8 +79,8 @@ export default function Page() {
           <input
             id="nameInput"
             className="border-[1px] h-10 w-full rounded-md p-4"
-            value={userName}
-            onChange={(e) => setUserName(e.target.value)}
+            ref={userNameInput}
+            onChange={(e) => (userName.current = e.target.value)}
             placeholder="Your name here"
           />
         </div>
