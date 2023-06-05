@@ -11,33 +11,34 @@ import Loading from "@/components/Loading";
 
 export default function Page() {
   const router = useRouter();
-  const [user] = useAuthState(auth);
+  const [user, userLoading, userError] = useAuthState(auth);
   const userNameInput = useRef<HTMLInputElement>(null);
 
   const userName = useRef("");
   const { currentUser, setCurrentUser } = useContext(GlobalContext);
 
-  if (!user) redirect("/login");
-
   useEffect(() => {
-    // setUserName(user?.email?.split("@")[0] ?? "");
-    userName.current = user?.email?.split("@")[0] ?? "";
-    const currentUserRef = doc(firebasedb, "users", user?.uid as string);
+    if (!user && !userLoading) redirect("/login");
 
-    (async function () {
-      const userData = await getDoc(
-        doc(firebasedb, "users", user?.uid as string)
-      );
+    if (user) {
+      userName.current = user?.email?.split("@")[0] ?? "";
+      const currentUserRef = doc(firebasedb, "users", user?.uid as string);
 
-      setCurrentUser({
-        uid: userData?.id ?? user?.uid,
-        name: userData?.data()?.name ?? user?.email?.split("@")[0],
-        email: userData?.data()?.email ?? user?.email,
-        firstLogin: userData?.data()?.firstLogin ?? true,
-        ref: currentUserRef,
-      });
-    })();
-  }, [setCurrentUser, user]);
+      (async function () {
+        const userData = await getDoc(
+          doc(firebasedb, "users", user?.uid as string)
+        );
+
+        setCurrentUser({
+          uid: userData?.id ?? user?.uid,
+          name: userData?.data()?.name ?? user?.email?.split("@")[0],
+          email: userData?.data()?.email ?? user?.email,
+          firstLogin: userData?.data()?.firstLogin ?? true,
+          ref: currentUserRef,
+        });
+      })();
+    }
+  }, [setCurrentUser, user, userLoading]);
 
   useEffect(() => {
     if (userNameInput.current) userNameInput.current!.value = userName.current;
