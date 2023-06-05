@@ -18,6 +18,7 @@ export default function RootLayout({
   ) : (
     <div className="flex flex-row ">
       <Sidebar />
+      <div className="h-screen bg-slate-200 w-[1px]"></div>
       <div className="w-full h-screen">{children}</div>
     </div>
   );

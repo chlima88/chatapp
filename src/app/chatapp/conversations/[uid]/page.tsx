@@ -79,6 +79,7 @@ export default function Page({ params }: { params: IParams }) {
       text: textInput.current?.value,
       sender: currentUser.ref,
       timestamp: serverTimestamp(),
+      unread: true,
     });
     textInput.current!.value = "";
   }
@@ -148,8 +149,8 @@ export default function Page({ params }: { params: IParams }) {
                     "p-2 rounded-md w-fit max-w-2xl " +
                     `${
                       message.sender.id === currentUser.uid
-                        ? "ml-auto bg-blue-300 "
-                        : "mr-auto bg-green-300 "
+                        ? "ml-auto bg-violet-200 "
+                        : "mr-auto bg-sky-200 "
                     }`
                   }
                 >

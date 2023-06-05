@@ -17,14 +17,14 @@ export default function Conversation({ displayName, uid }: IProps) {
           </div>
           <div className="flex flex-col">
             <div className="text-sm font-semibold">{displayName}</div>
-            <div className="text-xs">Parte da mensage...</div>
+            <div className="text-xs">Parte da ultima mensagem recebida...</div>
           </div>
         </div>
         <div>
           <div className="flex flex-col items-center">
             <div className="text-xs">12h ago</div>
-            <div className="text-xs p-[2px] text-white font-bold bg-red-500 rounded-full">
-              13
+            <div className="flex justify-center text-xs w-8 py-1 text-white font-semibold bg-red-500 rounded-full">
+              9+
             </div>
           </div>
         </div>
