@@ -1,37 +1,22 @@
 "use client";
-import { useCollectionData } from "react-firebase-hooks/firestore";
-import {
-  collection,
-  query,
-  where,
-  DocumentReference,
-  DocumentData,
-  getDoc,
-  doc,
-} from "firebase/firestore";
+import { useCollection } from "react-firebase-hooks/firestore";
+import { collection, query, where, getDoc, doc } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { UserContext } from "@/context/UserContext";
 import Conversation from "./Conversation";
 import { useContext, useEffect, useState } from "react";
 
-interface IConversation extends DocumentData {
-  uid: string;
-  participants: string[];
-  users: DocumentReference<DocumentData>[];
-  created_at: string;
-}
-
-interface IContact {
+interface IConversation {
   uid: string;
   name: string;
   email: string;
 }
 
 export default function ConversationList() {
-  const { currentUser, setCurrentUser } = useContext(UserContext);
-  const [contacts, setContacts] = useState<Array<IContact>>([]);
+  const { currentUser } = useContext(UserContext);
+  const [conversations, setConversations] = useState<Array<IConversation>>([]);
 
-  const [conversationsData] = useCollectionData(
+  const [conversationsData] = useCollection(
     query(
       collection(firebasedb, "conversations"),
       where("users", "array-contains", currentUser.ref)
@@ -40,30 +25,35 @@ export default function ConversationList() {
 
   useEffect(() => {
     Promise.all(
-      conversationsData?.map(async ({ users }) => {
+      conversationsData?.docs.map(async (conversation) => {
+        const { id } = conversation;
+        const { users } = conversation.data();
         const contactRef = users.find(
           (userRef: { id: string }) => userRef.id != currentUser.uid
         );
         const contact = await getDoc(
           doc(firebasedb, "users", contactRef?.id as string)
         );
-        return contact.data() as IContact;
+        return {
+          uid: id,
+          ...contact.data(),
+        } as IConversation;
       }) || []
-    ).then((data) => setContacts(data));
+    ).then((data) => setConversations(data));
   }, [conversationsData, currentUser.uid]);
 
   return (
-    contacts && (
+    conversations && (
       <div className="overflow-y-auto h-full">
         <div className="flex flex-col">
-          {contacts?.map((contact, index) => (
+          {conversations?.map((conversation, index) => (
             <>
               <Conversation
-                key={contact.uid}
-                displayName={contact.name}
-                uid={contact.uid}
+                key={conversation.uid}
+                displayName={conversation.name}
+                uid={conversation.uid}
               />
-              {index + 1 != contacts.length && (
+              {index + 1 != conversations.length && (
                 <div className="w-full bg-slate-200 h-[1px]"></div>
               )}
             </>
