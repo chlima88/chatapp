@@ -6,7 +6,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { getDoc, setDoc, doc } from "firebase/firestore";
 
 import { auth, firebasedb } from "@/lib/db";
-import { UserContext } from "@/context/UserContext";
+import { GlobalContext } from "@/context/GlobalContext";
 import Loading from "@/components/Loading";
 
 export default function Page() {
@@ -15,7 +15,7 @@ export default function Page() {
   const userNameInput = useRef<HTMLInputElement>(null);
 
   const userName = useRef("");
-  const { currentUser, setCurrentUser } = useContext(UserContext);
+  const { currentUser, setCurrentUser } = useContext(GlobalContext);
 
   if (!user) redirect("/login");
 

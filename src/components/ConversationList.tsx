@@ -2,7 +2,7 @@
 import { useCollection } from "react-firebase-hooks/firestore";
 import { collection, query, where, getDoc, doc } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
-import { UserContext } from "@/context/UserContext";
+import { GlobalContext } from "@/context/GlobalContext";
 import Conversation from "./Conversation";
 import { useContext, useEffect, useState } from "react";
 
@@ -13,7 +13,7 @@ interface IConversation {
 }
 
 export default function ConversationList() {
-  const { currentUser } = useContext(UserContext);
+  const { currentUser } = useContext(GlobalContext);
   const [conversations, setConversations] = useState<Array<IConversation>>([]);
 
   const [conversationsData] = useCollection(

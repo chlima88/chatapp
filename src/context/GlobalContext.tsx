@@ -10,23 +10,23 @@ interface CurrentUser {
   ref: DocumentReference<DocumentData>;
 }
 
-interface ICurrentUserContext {
+interface IGlobalContext {
   currentUser: CurrentUser;
   setCurrentUser: Dispatch<SetStateAction<CurrentUser>>;
 }
 
-const UserContext = createContext({} as ICurrentUserContext);
+const GlobalContext = createContext({} as IGlobalContext);
 
-function UserProvider({ children }: { children: React.ReactNode }) {
+function GlobalProvider({ children }: { children: React.ReactNode }) {
   const [currentUser, setCurrentUser] = useState<CurrentUser>(
     {} as CurrentUser
   );
 
   return (
-    <UserContext.Provider value={{ currentUser, setCurrentUser }}>
+    <GlobalContext.Provider value={{ currentUser, setCurrentUser }}>
       {children}
-    </UserContext.Provider>
+    </GlobalContext.Provider>
   );
 }
 
-export { UserContext, UserProvider };
+export { GlobalContext, GlobalProvider };

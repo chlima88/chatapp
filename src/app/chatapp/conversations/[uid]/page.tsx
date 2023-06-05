@@ -17,7 +17,7 @@ import {
   DocumentData,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
-import { UserContext } from "@/context/UserContext";
+import { GlobalContext } from "@/context/GlobalContext";
 
 interface IParams {
   uid: string;
@@ -31,7 +31,7 @@ interface IConversationData {
 }
 
 export default function Page({ params }: { params: IParams }) {
-  const { currentUser } = useContext(UserContext);
+  const { currentUser } = useContext(GlobalContext);
   const textInput = useRef<HTMLTextAreaElement>(null);
   const [contactName, setContactName] = useState("");
 
