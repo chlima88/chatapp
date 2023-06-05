@@ -131,7 +131,7 @@ export default function Page({ params }: { params: IParams }) {
         <div className="text-slate-100 bg-slate-500 rounded-full">
           <Icon icon="radix-icons:avatar" width="45" height="45" />
         </div>
-        <div>{contactName}</div>
+        <p className="font-semibold">{contactName}</p>
       </div>
       <div className="h-full overflow-y-auto ">
         <div className="flex flex-col gap-2 pr-4">
