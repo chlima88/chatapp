@@ -22,6 +22,7 @@ export default function Page() {
   useEffect(() => {
     // setUserName(user?.email?.split("@")[0] ?? "");
     userName.current = user?.email?.split("@")[0] ?? "";
+    const currentUserRef = doc(firebasedb, "users", user?.uid as string);
 
     (async function () {
       const userData = await getDoc(
@@ -33,12 +34,12 @@ export default function Page() {
         name: userData?.data()?.name ?? user?.email?.split("@")[0],
         email: userData?.data()?.email ?? user?.email,
         firstLogin: userData?.data()?.firstLogin ?? true,
+        ref: currentUserRef,
       });
     })();
   }, [setCurrentUser, user]);
 
   useEffect(() => {
-    console.log(userNameInput.current);
     if (userNameInput.current) userNameInput.current!.value = userName.current;
   }, [currentUser]);
 

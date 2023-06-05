@@ -1,30 +1,13 @@
 "use client";
 import { Icon } from "@iconify/react";
 import { signOut } from "firebase/auth";
-import { firebasedb, auth } from "@/lib/db";
+import { auth } from "@/lib/db";
 import { UserContext } from "@/context/UserContext";
-import { Dispatch, SetStateAction, useContext } from "react";
-import { doc } from "firebase/firestore";
-import { useDocument } from "react-firebase-hooks/firestore";
+import { useContext } from "react";
 import ConversationList from "./ConversationList";
 
-interface CurrentUser {
-  uid: string;
-  name: string;
-  email: string;
-  firstLogin: boolean;
-}
-interface ICurrentUserContext {
-  currentUser: CurrentUser;
-  setCurrentUser: Dispatch<SetStateAction<CurrentUser>>;
-}
 export default function Sidebar() {
-  const { currentUser, setCurrentUser } =
-    useContext<ICurrentUserContext>(UserContext);
-
-  const [snapshot] = useDocument(
-    doc(firebasedb, "users", currentUser?.uid as string)
-  );
+  const { currentUser, setCurrentUser } = useContext(UserContext);
 
   function handleLogOut(): void {
     signOut(auth);
@@ -39,7 +22,7 @@ export default function Sidebar() {
               <div>
                 <Icon icon="radix-icons:avatar" width="50" height="50" />
               </div>
-              <div className="font-bold">{snapshot?.data()?.name}</div>
+              <div className="font-bold">{currentUser.name}</div>
             </div>
             <button className="flex items-center gap-1" onClick={handleLogOut}>
               Sair

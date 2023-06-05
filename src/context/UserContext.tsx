@@ -1,4 +1,5 @@
 "use client";
+import { DocumentData, DocumentReference } from "firebase/firestore";
 import { Dispatch, SetStateAction, createContext, useState } from "react";
 
 interface CurrentUser {
@@ -6,6 +7,7 @@ interface CurrentUser {
   name: string;
   email: string;
   firstLogin: boolean;
+  ref: DocumentReference<DocumentData>;
 }
 
 interface ICurrentUserContext {

@@ -3,11 +3,11 @@ import { Icon } from "@iconify/react";
 import Link from "next/link";
 
 interface IProps {
-  email: string;
+  displayName: string;
   uid: string;
 }
 
-export default function Conversation({ email, uid }: IProps) {
+export default function Conversation({ displayName, uid }: IProps) {
   return (
     <Link href={`chatapp/conversations/${uid}`}>
       <div className="flex flex-row items-center justify-between p-2 hover:bg-sky-100 hover:cursor-pointer">
@@ -16,7 +16,7 @@ export default function Conversation({ email, uid }: IProps) {
             <Icon icon="radix-icons:avatar" width="40" height="40" />
           </div>
           <div className="flex flex-col">
-            <div className="text-sm font-semibold">{email}</div>
+            <div className="text-sm font-semibold">{displayName}</div>
             <div className="text-xs">Parte da mensage...</div>
           </div>
         </div>
