@@ -44,7 +44,6 @@ export default function ConversationList() {
         const contactRef = users.find(
           (userRef: { id: string }) => userRef.id != currentUser.uid
         );
-        console.log(contactRef);
         const contact = await getDoc(
           doc(firebasedb, "users", contactRef?.id as string)
         );
