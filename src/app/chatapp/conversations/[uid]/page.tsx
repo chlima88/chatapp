@@ -15,7 +15,6 @@ import {
   orderBy,
   DocumentReference,
   DocumentData,
-  startAt,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { UserContext } from "@/context/UserContext";
@@ -41,8 +40,7 @@ export default function Page({ params }: { params: IParams }) {
   const [messages] = useCollectionData(
     query(
       collection(firebasedb, `conversations/${uid}/messages`),
-      orderBy("timestamp"),
-      startAt(5)
+      orderBy("timestamp")
     )
   );
 
