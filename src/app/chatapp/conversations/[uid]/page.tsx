@@ -1,10 +1,9 @@
 "use client";
-import { FormEvent, useContext, useState } from "react";
+import { FormEvent, useContext, useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import {
   useCollectionData,
   useCollection,
-  useDocument,
   useDocumentData,
 } from "react-firebase-hooks/firestore";
 import {
@@ -14,10 +13,9 @@ import {
   query,
   where,
   orderBy,
-  doc,
   DocumentReference,
   DocumentData,
-  getDoc,
+  startAt,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { UserContext } from "@/context/UserContext";
@@ -26,7 +24,7 @@ interface IParams {
   uid: string;
 }
 
-interface IConversation {
+interface IConversationData {
   uid: string;
   participants: string[];
   created_at: string;
@@ -35,43 +33,56 @@ interface IConversation {
 
 export default function Page({ params }: { params: IParams }) {
   const { currentUser } = useContext(UserContext);
-  const [inputText, setInputText] = useState("");
+  const textInput = useRef<HTMLTextAreaElement>(null);
+  const [contactName, setContactName] = useState("");
 
   const { uid } = params;
 
-  const q = query(
-    collection(firebasedb, `conversations/${uid}/messages`),
-    orderBy("timestamp")
-  );
-  const [messagesSnapshot] = useCollection(q);
-  const messages = messagesSnapshot?.docs.map((doc) => doc.data());
-
-  const [conversationsSnapshot, loading, error] = useCollection(
-    collection(firebasedb, "conversations")
-  );
-  const conversation = conversationsSnapshot?.docs
-    .map((doc) => ({ uid: doc.id, ...doc.data() } as IConversation))
-    .find((conversation) => conversation.uid === uid);
-
-  const currentUserRef = doc(firebasedb, "users", currentUser.uid);
-
-  const [userSnapshot] = useDocumentData(
-    conversation?.users.find(
-      (conversationUser) => conversationUser.id != currentUserRef.id
+  const [messages] = useCollectionData(
+    query(
+      collection(firebasedb, `conversations/${uid}/messages`),
+      orderBy("timestamp"),
+      startAt(5)
     )
   );
 
-  const contactName = userSnapshot?.name;
+  const [conversationsData] = useCollection(
+    query(
+      collection(firebasedb, "conversations"),
+      where("users", "array-contains", currentUser.ref)
+    )
+  );
+
+  const conversation = conversationsData?.docs
+    .map(
+      (conversations) =>
+        ({
+          uid: conversations.id,
+          ...conversations.data(),
+        } as IConversationData)
+    )
+    .find((conversation) => conversation.uid === uid);
+
+  const [contact] = useDocumentData(
+    conversation?.users.find((conversationUser) => {
+      return conversationUser.id != currentUser.uid;
+    })
+  );
+
+  useEffect(() => {
+    setContactName(contact?.name);
+    console.log(contact);
+  }, [contact]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (inputText === "") return;
+    if (textInput.current?.value == "") return;
     await addDoc(collection(firebasedb, `conversations/${uid}/messages`), {
-      text: inputText,
-      sender: currentUser.email,
+      text: textInput.current?.value,
+      sender: currentUser.ref,
       timestamp: serverTimestamp(),
     });
-    setInputText("");
+    textInput.current!.value = "";
   }
 
   function getRelativeTime(timestamp: number) {
@@ -125,32 +136,34 @@ export default function Page({ params }: { params: IParams }) {
       </div>
       <div className="h-full overflow-y-auto ">
         <div className="flex flex-col gap-2 pr-4">
-          {messages?.map((message) => (
-            <div
-              className={
-                "w-full " +
-                `${message.sender === "clima@google.com" ? "pl-8" : "pr-8"}`
-              }
-              key={message.id}
-            >
+          {messages?.map((message) => {
+            return (
               <div
                 className={
-                  "p-2 rounded-md w-fit max-w-2xl " +
-                  `${
-                    message.sender === "clima@google.com"
-                      ? "ml-auto bg-blue-300 "
-                      : "mr-auto bg-green-300 "
-                  }`
+                  "w-full " +
+                  `${message.sender.id === currentUser.uid ? "pl-8" : "pr-8"}`
                 }
+                key={message.id}
               >
-                <div>{message.text}</div>
-                <div className={"text-xs text-slate-500 text-right"}>
-                  {message.timestamp &&
-                    getRelativeTime(message.timestamp.toDate())}
+                <div
+                  className={
+                    "p-2 rounded-md w-fit max-w-2xl " +
+                    `${
+                      message.sender.id === currentUser.uid
+                        ? "ml-auto bg-blue-300 "
+                        : "mr-auto bg-green-300 "
+                    }`
+                  }
+                >
+                  <div>{message.text}</div>
+                  <div className={"text-xs text-slate-500 text-right"}>
+                    {message.timestamp &&
+                      getRelativeTime(message.timestamp.toDate())}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
       <form
@@ -162,8 +175,7 @@ export default function Page({ params }: { params: IParams }) {
           max-rows="6"
           placeholder="Message"
           className="resize-none border-[1px]  border-slate-200 rounded-md p-2 text-black w-full"
-          onChange={(e) => setInputText(e.target.value)}
-          value={inputText}
+          ref={textInput}
         ></textarea>
         <button
           className="bg-violet-500 text-white font-semibold w-48 rounded-md hover:bg-violet-500/80"
