@@ -18,9 +18,8 @@ export default function Page() {
   const { currentUser, setCurrentUser } = useContext(GlobalContext);
 
   useEffect(() => {
-    if (!user && !userLoading) redirect("/login");
-    console.log("not redirected");
-    if (user) {
+    if (!user) redirect("/login");
+    else {
       userName.current = user?.email?.split("@")[0] ?? "";
       const currentUserRef = doc(firebasedb, "users", user?.uid as string);
 

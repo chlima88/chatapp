@@ -69,7 +69,6 @@ export default function Page({ params }: { params: IParams }) {
 
   useEffect(() => {
     setContactName(contact?.name);
-    console.log(contact);
   }, [contact]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
