@@ -49,7 +49,7 @@ export default function StartConversation({ display, toggle }: IProps) {
         .filter((user) => user.uid != currentUser.uid) || [];
 
     if (searchInput === "") {
-      setFilteredUsers([...users]);
+      setFilteredUsers([...users, ...users, ...users, ...users, ...users]);
     } else {
       setFilteredUsers(
         users.filter(
@@ -99,7 +99,10 @@ export default function StartConversation({ display, toggle }: IProps) {
             onChange={handleSearch}
           />
         </div>
-        <div className="w-full max-h-96 overflow-y-auto">
+        <div
+          className="w-full max-h-96 overflow-y-hidden hover:overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-violet-200"
+          style={{ scrollbarGutter: "stable" }}
+        >
           <div className="flex flex-col gap-3 p-4">
             {filteredUsers?.map((user, index) => (
               <>

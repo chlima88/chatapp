@@ -137,7 +137,10 @@ export default function Page({ params }: { params: IParams }) {
         </div>
         <p className="font-semibold">{contactName}</p>
       </div>
-      <div className="h-full overflow-y-auto px-4">
+      <div
+        className="h-full px-4 overflow-y-hidden hover:overflow-y-auto transition-all scrollbar-thin scrollbar-track-transparent scrollbar-thumb-violet-200"
+        style={{ scrollbarGutter: "stable " }}
+      >
         <div className="flex flex-col gap-2 ">
           {messages?.map((message, index) => {
             return (
