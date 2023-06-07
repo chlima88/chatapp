@@ -99,34 +99,36 @@ export default function StartConversation({ display, toggle }: IProps) {
             onChange={handleSearch}
           />
         </div>
-        <div className="flex flex-col gap-3 p-4">
-          {filteredUsers?.map((user, index) => (
-            <>
-              <div
-                className="flex flex-row items-center justify-between"
-                key={user.uid}
-              >
-                <div className="flex flex-row gap-3">
-                  <div className="text-slate-100 bg-slate-500 rounded-full ">
-                    <Icon icon="radix-icons:avatar" width="40" height="40" />
-                  </div>
-                  <div className="">
-                    <p className="font-semibold">{user.name}</p>
-                    <p className="text-xs text-slate-600">{user.email}</p>
-                  </div>
-                </div>
-                <button
-                  className="bg-violet-500 text-white rounded-md p-2 hover:bg-violet-400 transition-colors"
-                  onClick={() => handleInvite(user.ref)}
+        <div className="w-full max-h-96 overflow-y-auto">
+          <div className="flex flex-col gap-3 p-4">
+            {filteredUsers?.map((user, index) => (
+              <>
+                <div
+                  className="flex flex-row items-center justify-between"
+                  key={user.uid}
                 >
-                  Invite
-                </button>
-              </div>
-              {index + 1 != filteredUsers.length && (
-                <div className="bg-slate-200 h-[1px]"></div>
-              )}
-            </>
-          ))}
+                  <div className="flex flex-row gap-3">
+                    <div className="text-slate-100 bg-slate-500 rounded-full ">
+                      <Icon icon="radix-icons:avatar" width="40" height="40" />
+                    </div>
+                    <div className="">
+                      <p className="font-semibold">{user.name}</p>
+                      <p className="text-xs text-slate-600">{user.email}</p>
+                    </div>
+                  </div>
+                  <button
+                    className="bg-violet-500 text-white rounded-md p-2 hover:bg-violet-400 transition-colors"
+                    onClick={() => handleInvite(user.ref)}
+                  >
+                    Invite
+                  </button>
+                </div>
+                {index + 1 != filteredUsers.length && (
+                  <div className="bg-slate-200 h-[1px]"></div>
+                )}
+              </>
+            ))}
+          </div>
         </div>
       </div>
     </div>
