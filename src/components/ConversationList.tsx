@@ -21,9 +21,12 @@ interface IConversation {
   email: string;
 }
 
-export default function ConversationList() {
+export default function ConversationList({ filter }: { filter: string }) {
   const { currentUser, conversations, setConversations } =
     useContext(GlobalContext);
+  const [filteredConversations, setFilteredConversations] = useState<
+    IConversation[]
+  >([]);
 
   const [conversationsData] = useCollection(
     query(
@@ -31,6 +34,20 @@ export default function ConversationList() {
       where("users", "array-contains", currentUser.ref)
     )
   );
+
+  useEffect(() => {
+    if (filter === "") {
+      setFilteredConversations([...conversations]);
+    } else {
+      setFilteredConversations(
+        conversations.filter(
+          (conversation) =>
+            conversation.email.toLowerCase().includes(filter.toLowerCase()) ||
+            conversation.name.toLowerCase().includes(filter.toLowerCase())
+        )
+      );
+    }
+  }, [filter, conversations]);
 
   useEffect(() => {
     Promise.all(
@@ -53,17 +70,17 @@ export default function ConversationList() {
   }, [conversationsData, currentUser.uid, setConversations]);
 
   return (
-    conversations && (
+    filteredConversations && (
       <div className="overflow-y-auto h-full">
         <div className="flex flex-col">
-          {conversations?.map((conversation, index) => (
+          {filteredConversations?.map((conversation, index) => (
             <>
               <Conversation
                 key={conversation.uid}
                 displayName={conversation.name}
                 uid={conversation.uid}
               />
-              {index + 1 != conversations.length && (
+              {index + 1 != filteredConversations.length && (
                 <div className="w-full bg-slate-200 h-[1px]"></div>
               )}
             </>
