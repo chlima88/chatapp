@@ -1,6 +1,14 @@
 "use client";
 import { useCollection } from "react-firebase-hooks/firestore";
-import { collection, query, where, getDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDoc,
+  doc,
+  DocumentData,
+  DocumentReference,
+} from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
 import Conversation from "./Conversation";
@@ -8,13 +16,14 @@ import { useContext, useEffect, useState } from "react";
 
 interface IConversation {
   uid: string;
+  contactRef: DocumentReference<DocumentData>;
   name: string;
   email: string;
 }
 
 export default function ConversationList() {
-  const { currentUser } = useContext(GlobalContext);
-  const [conversations, setConversations] = useState<Array<IConversation>>([]);
+  const { currentUser, conversations, setConversations } =
+    useContext(GlobalContext);
 
   const [conversationsData] = useCollection(
     query(
@@ -36,11 +45,12 @@ export default function ConversationList() {
         );
         return {
           uid: id,
+          contactRef,
           ...contact.data(),
         } as IConversation;
       }) || []
     ).then((data) => setConversations(data));
-  }, [conversationsData, currentUser.uid]);
+  }, [conversationsData, currentUser.uid, setConversations]);
 
   return (
     conversations && (

@@ -2,6 +2,7 @@ import { Icon } from "@iconify/react";
 import { firebasedb } from "@/lib/db";
 import {
   DocumentData,
+  DocumentReference,
   DocumentSnapshot,
   addDoc,
   collection,
@@ -17,6 +18,7 @@ import {
 } from "react";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { GlobalContext } from "@/context/GlobalContext";
+import { useRouter } from "next/navigation";
 
 interface IProps {
   display: boolean;
@@ -25,14 +27,15 @@ interface IProps {
 
 interface IUsers {
   uid: string;
-  ref: DocumentSnapshot<DocumentData>;
+  ref: DocumentReference<DocumentData>;
   name: string;
   email: string;
 }
 
 export default function StartConversation({ display, toggle }: IProps) {
+  const router = useRouter();
   const [usersData] = useCollection(collection(firebasedb, "users"));
-  const { currentUser } = useContext(GlobalContext);
+  const { currentUser, conversations } = useContext(GlobalContext);
   const [searchInput, setSearchInput] = useState("");
   const [filteredUsers, setFilteredUsers] = useState<IUsers[]>([]);
 
@@ -65,11 +68,19 @@ export default function StartConversation({ display, toggle }: IProps) {
     toggle(false);
   }
 
-  async function handleInvite(userRef: DocumentSnapshot<DocumentData>) {
-    await addDoc(collection(firebasedb, "conversations"), {
-      users: [currentUser.ref, userRef],
-      created_at: serverTimestamp(),
-    });
+  async function handleInvite(userRef: DocumentReference<DocumentData>) {
+    const conversation = conversations.find(
+      (conversation) => conversation.contactRef.id == userRef.id
+    );
+
+    if (conversation) {
+      router.push(`chatapp/conversations/${conversation.uid}`);
+    } else {
+      await addDoc(collection(firebasedb, "conversations"), {
+        users: [currentUser.ref, userRef],
+        created_at: serverTimestamp(),
+      });
+    }
     toggle(false);
   }
 
