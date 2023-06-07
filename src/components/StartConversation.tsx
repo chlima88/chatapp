@@ -82,7 +82,10 @@ export default function StartConversation({ display, toggle }: IProps) {
       className="flex flex-col items-center justify-center backdrop-blur-sm ins absolute z-10 bg-slate-950/70 w-full h-screen"
       onClick={CloseModal}
     >
-      <div className="bg-white p-2 w-96" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="bg-white px-2 py-4 w-96"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex justify-between px-4 py-2">
           <p className="text-xl font-bold">Start conversation with...</p>
           <button
@@ -92,18 +95,30 @@ export default function StartConversation({ display, toggle }: IProps) {
             <Icon icon="mdi:close-box" width="24" height="24" />
           </button>
         </div>
-        <div className="py-2 px-4 ">
+        <div className="relative flex items-center py-2 px-4 group">
+          <Icon
+            className="text-slate-400 absolute left-6"
+            icon="material-symbols:search"
+            width="20"
+            height="20"
+          />
           <input
-            className="p-2 border-[1px] w-full "
+            className="py-2 px-8 border-[1px] w-full rounded-sm"
             placeholder="Search..."
             onChange={handleSearch}
+          />
+          <Icon
+            className="invisible group-focus-within:visible text-slate-400 absolute right-6"
+            icon="iconamoon:close-light"
+            width="24"
+            height="24"
           />
         </div>
         <div
           className="w-full max-h-96 overflow-y-hidden hover:overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-violet-200"
-          style={{ scrollbarGutter: "stable" }}
+          style={{ scrollbarGutter: "stable both-edges" }}
         >
-          <div className="flex flex-col gap-3 p-4">
+          <div className="flex flex-col gap-3 py-4 px-2">
             {filteredUsers?.map((user, index) => (
               <>
                 <div
