@@ -7,7 +7,14 @@ import {
   collection,
   serverTimestamp,
 } from "firebase/firestore";
-import { Dispatch, SetStateAction, useContext } from "react";
+import {
+  ChangeEvent,
+  Dispatch,
+  SetStateAction,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { useCollection } from "react-firebase-hooks/firestore";
 import { GlobalContext } from "@/context/GlobalContext";
 
@@ -26,15 +33,33 @@ interface IUsers {
 export default function StartConversation({ display, toggle }: IProps) {
   const [usersData] = useCollection(collection(firebasedb, "users"));
   const { currentUser } = useContext(GlobalContext);
-  const users = usersData?.docs
-    .map((user) => {
-      return {
-        uid: user.id,
-        ref: user.ref,
-        ...user.data(),
-      } as unknown as IUsers;
-    })
-    .filter((user) => user.uid != currentUser.uid);
+  const [searchInput, setSearchInput] = useState("");
+  const [filteredUsers, setFilteredUsers] = useState<IUsers[]>([]);
+
+  useEffect(() => {
+    const users =
+      usersData?.docs
+        .map((user) => {
+          return {
+            uid: user.id,
+            ref: user.ref,
+            ...user.data(),
+          } as unknown as IUsers;
+        })
+        .filter((user) => user.uid != currentUser.uid) || [];
+
+    if (searchInput === "") {
+      setFilteredUsers([...users]);
+    } else {
+      setFilteredUsers(
+        users.filter(
+          (user) =>
+            user.email.toLowerCase().includes(searchInput.toLowerCase()) ||
+            user.name.toLowerCase().includes(searchInput.toLowerCase())
+        )
+      );
+    }
+  }, [currentUser.uid, searchInput, usersData]);
 
   function CloseModal(): void {
     toggle(false);
@@ -48,6 +73,10 @@ export default function StartConversation({ display, toggle }: IProps) {
     toggle(false);
   }
 
+  function handleSearch(event: ChangeEvent<HTMLInputElement>): void {
+    setSearchInput(event.target.value);
+  }
+
   return display ? (
     <div
       className="flex flex-col items-center justify-center backdrop-blur-sm ins absolute z-10 bg-slate-950/70 w-full h-screen"
@@ -55,7 +84,7 @@ export default function StartConversation({ display, toggle }: IProps) {
     >
       <div className="bg-white p-2 w-96" onClick={(e) => e.stopPropagation()}>
         <div className="flex justify-between px-4 py-2">
-          <p className="text-xl font-bold">Iniciar conversa com...</p>
+          <p className="text-xl font-bold">Start conversation with...</p>
           <button
             className="text-violet-500 hover:text-violet-400 transition-colors"
             onClick={CloseModal}
@@ -63,8 +92,15 @@ export default function StartConversation({ display, toggle }: IProps) {
             <Icon icon="mdi:close-box" width="24" height="24" />
           </button>
         </div>
+        <div className="py-2 px-4 ">
+          <input
+            className="p-2 border-[1px] w-full "
+            placeholder="Search..."
+            onChange={handleSearch}
+          />
+        </div>
         <div className="flex flex-col gap-3 p-4">
-          {users?.map((user, index) => (
+          {filteredUsers?.map((user, index) => (
             <>
               <div
                 className="flex flex-row items-center justify-between"
@@ -76,7 +112,7 @@ export default function StartConversation({ display, toggle }: IProps) {
                   </div>
                   <div className="">
                     <p className="font-semibold">{user.name}</p>
-                    <p className="text-xs">{user.email}</p>
+                    <p className="text-xs text-slate-600">{user.email}</p>
                   </div>
                 </div>
                 <button
@@ -86,7 +122,7 @@ export default function StartConversation({ display, toggle }: IProps) {
                   Invite
                 </button>
               </div>
-              {index + 1 != users.length && (
+              {index + 1 != filteredUsers.length && (
                 <div className="bg-slate-200 h-[1px]"></div>
               )}
             </>
