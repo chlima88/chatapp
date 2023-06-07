@@ -34,6 +34,7 @@ export default function Page({ params }: { params: IParams }) {
   const { currentUser } = useContext(GlobalContext);
   const textInput = useRef<HTMLTextAreaElement>(null);
   const [contactName, setContactName] = useState("");
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
   const { uid } = params;
 
@@ -70,6 +71,10 @@ export default function Page({ params }: { params: IParams }) {
   useEffect(() => {
     setContactName(contact?.name);
   }, [contact]);
+
+  useEffect(() => {
+    lastMessageRef.current?.scrollIntoView();
+  });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -125,21 +130,21 @@ export default function Page({ params }: { params: IParams }) {
   }
 
   return (
-    <div className="flex flex-col px-2 py-4 gap-2 h-full">
+    <div className="flex flex-col pl-2 pr-4 py-4 gap-2 h-full">
       <div className="flex gap-5 items-center border-b-[1px] pb-2 h-20">
         <div className="text-slate-100 bg-slate-500 rounded-full">
           <Icon icon="radix-icons:avatar" width="45" height="45" />
         </div>
         <p className="font-semibold">{contactName}</p>
       </div>
-      <div className="h-full overflow-y-auto ">
-        <div className="flex flex-col gap-2 pr-4">
-          {messages?.map((message) => {
+      <div className="h-full overflow-y-auto px-4">
+        <div className="flex flex-col gap-2 ">
+          {messages?.map((message, index) => {
             return (
               <div
                 className={
-                  "w-full " +
-                  `${message.sender.id === currentUser.uid ? "pl-8" : "pr-8"}`
+                  "w-full" +
+                  ` ${message.sender.id === currentUser.uid ? "pl-8" : "pr-8"}`
                 }
                 key={message.id}
               >
@@ -152,6 +157,7 @@ export default function Page({ params }: { params: IParams }) {
                         : "mr-auto bg-sky-200 "
                     }`
                   }
+                  ref={index + 1 == messages.length ? lastMessageRef : null}
                 >
                   <div>{message.text}</div>
                   <div className={"text-xs text-slate-500 text-right"}>
