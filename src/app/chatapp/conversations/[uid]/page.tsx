@@ -76,16 +76,31 @@ export default function Page({ params }: { params: IParams }) {
     lastMessageRef.current?.scrollIntoView();
   });
 
+  useEffect(() => {
+    textInput.current?.addEventListener("keydown", (event: KeyboardEvent) => {
+      if (event.key == "Enter" && !event.shiftKey) {
+        event.preventDefault();
+        (event.target as HTMLTextAreaElement).form?.requestSubmit();
+      }
+    });
+  }, []);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (textInput.current?.value == "") return;
+
+    const regex = /^[\r\n\s]*$/g;
+
+    if (textInput.current?.value.match(regex)) return;
+
+    const text = textInput.current!.value;
+    textInput.current!.value = "";
+
     await addDoc(collection(firebasedb, `conversations/${uid}/messages`), {
-      text: textInput.current?.value,
+      text: text,
       sender: currentUser.ref,
       timestamp: serverTimestamp(),
       unread: true,
     });
-    textInput.current!.value = "";
   }
 
   function getRelativeTime(timestamp: number) {
