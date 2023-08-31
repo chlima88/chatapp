@@ -7,14 +7,17 @@ import { auth } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
 import ConversationList from "./ConversationList";
 import StartConversation from "@/components/StartConversation";
+import { redirect, useRouter } from "next/navigation";
 
 export default function Sidebar() {
   const { currentUser } = useContext(GlobalContext);
   const [searchInput, setSearchInput] = useState("");
   const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
 
-  function handleLogOut(): void {
-    signOut(auth);
+  async function handleLogOut(): Promise<void> {
+    await signOut(auth);
+    // redirect("/login");
   }
 
   function handleNewConversation(): void {
