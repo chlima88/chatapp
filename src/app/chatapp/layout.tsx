@@ -4,17 +4,21 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/db";
 import Loading from "@/components/Loading";
 import Sidebar from "@/components/Sidebar";
+import { GlobalContext } from "@/context/GlobalContext";
+import { useContext } from "react";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const [user, loading, error] = useAuthState(auth);
-  if (!user) redirect("/login");
+  const { userSession, userLoading, currentUser } = useContext(GlobalContext);
 
-  return loading ? (
-    <Loading />
+  if (!userSession) redirect("/login");
+
+  return userLoading ? (
+    // <Loading />
+    <div>Chatapp layout</div>
   ) : (
     <div className="flex flex-row ">
       <Sidebar />

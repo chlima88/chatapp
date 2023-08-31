@@ -4,8 +4,8 @@ import { redirect, useRouter } from "next/navigation";
 import { useContext } from "react";
 
 export default function Home() {
-  const { currentUser } = useContext(GlobalContext);
+  const { userSession } = useContext(GlobalContext);
   const router = useRouter();
 
-  return currentUser.email ? router.push("/chatapp") : redirect("/login");
+  return userSession ? router.push("/chatapp") : redirect("/login");
 }
