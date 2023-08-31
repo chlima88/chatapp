@@ -224,9 +224,10 @@ export default function Page({ params }: { params: IParams }) {
         <div className="text-slate-100 bg-slate-500 rounded-full">
           <Icon icon="radix-icons:avatar" width="45" height="45" />
         </div>
+        <p className="font-semibold">{contactName}</p>
 
         <Link href={`chatapp`}>
-          <p className="font-semibold">{contactName}</p>
+          <Icon icon="mdi:close" />
         </Link>
       </div>
       <div
@@ -255,14 +256,23 @@ export default function Page({ params }: { params: IParams }) {
                   ref={index + 1 == messages.length ? lastMessageRef : null}
                 >
                   <div>{message.text}</div>
-                  <div className={"text-xs text-slate-500 text-right"}>
+                  <div
+                    className={"text-xs text-slate-500 text-right"}
+                    title={new Intl.DateTimeFormat(["pt-BR"], {
+                      day: "numeric",
+                      month: "numeric",
+                      year: "numeric",
+                      hour: "numeric",
+                      minute: "numeric",
+                    }).format(message.timestamp?.toDate().getTime())}
+                  >
                     {message.sender.id == currentUser.uid &&
                     message.lastSeenBy.filter(
                       (user) => user.id != currentUser.uid
                     ) &&
                     message.lastSeenBy?.length > 0 ? (
                       <Icon
-                        className={"inline mx-2"}
+                        className={"inline mr-2"}
                         icon="fluent:eye-24-filled"
                       />
                     ) : (
