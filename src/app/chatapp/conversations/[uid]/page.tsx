@@ -9,15 +9,19 @@ import {
 import {
   collection,
   addDoc,
+  updateDoc,
   serverTimestamp,
   query,
   where,
   orderBy,
   DocumentReference,
   DocumentData,
+  doc,
+  Timestamp,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
+import Link from "next/link";
 
 interface IParams {
   uid: string;
@@ -30,6 +34,15 @@ interface IConversationData {
   users: DocumentReference<DocumentData>[];
 }
 
+interface IMessages {
+  id: string;
+  sender: DocumentReference<DocumentData>;
+  timestamp: Timestamp;
+  text: string;
+  unread: boolean;
+  lastSeenBy: DocumentReference<DocumentData>[];
+}
+
 export default function Page({ params }: { params: IParams }) {
   const { currentUser } = useContext(GlobalContext);
   const textInput = useRef<HTMLTextAreaElement>(null);
@@ -38,11 +51,26 @@ export default function Page({ params }: { params: IParams }) {
 
   const { uid } = params;
 
-  const [messages] = useCollectionData(
+  // const [messages] = useCollectionData(
+  //   query(
+  //     collection(firebasedb, `conversations/${uid}/messages`),
+  //     orderBy("timestamp")
+  //   )
+  // );
+
+  const [messagesData] = useCollection(
     query(
       collection(firebasedb, `conversations/${uid}/messages`),
       orderBy("timestamp")
     )
+  );
+
+  const messages = messagesData?.docs.map(
+    (message) =>
+      ({
+        id: message.id,
+        ...message.data(),
+      } as IMessages)
   );
 
   const [conversationsData] = useCollection(
@@ -74,7 +102,52 @@ export default function Page({ params }: { params: IParams }) {
 
   useEffect(() => {
     lastMessageRef.current?.scrollIntoView();
+
+    // messages?.find(message => message.lastSeenBy.filter((user) => user.id === currentUser.uid))
   });
+
+  useEffect(() => {
+    messages
+      ?.filter(
+        (message) =>
+          message.unread === false &&
+          message.sender.id != currentUser.uid &&
+          messages.indexOf(message) + 1 < messages.length &&
+          message.lastSeenBy.filter((user) => user.id === currentUser.uid)
+            .length > 0
+      )
+      .map((message) => {
+        message.lastSeenBy.splice(
+          message.lastSeenBy.indexOf(currentUser.ref),
+          1
+        );
+
+        updateDoc(
+          doc(firebasedb, `conversations/${uid}/messages/${message.id}`),
+          {
+            lastSeenBy: [],
+          }
+        );
+      });
+
+    messages
+      ?.filter(
+        (message) =>
+          message.unread === true && message.sender.id != currentUser.uid
+      )
+      .map((message, index, arr) => {
+        updateDoc(
+          doc(firebasedb, `conversations/${uid}/messages/${message.id}`),
+          {
+            unread: !message.unread,
+            lastSeenBy:
+              index === arr.length - 1
+                ? [...message.lastSeenBy, currentUser.ref]
+                : message.lastSeenBy,
+          }
+        );
+      });
+  }, [messagesData]);
 
   useEffect(() => {
     textInput.current?.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -100,6 +173,7 @@ export default function Page({ params }: { params: IParams }) {
       sender: currentUser.ref,
       timestamp: serverTimestamp(),
       unread: true,
+      lastSeenBy: [],
     });
   }
 
@@ -150,7 +224,10 @@ export default function Page({ params }: { params: IParams }) {
         <div className="text-slate-100 bg-slate-500 rounded-full">
           <Icon icon="radix-icons:avatar" width="45" height="45" />
         </div>
-        <p className="font-semibold">{contactName}</p>
+
+        <Link href={`chatapp`}>
+          <p className="font-semibold">{contactName}</p>
+        </Link>
       </div>
       <div
         className="h-full px-4 overflow-y-hidden hover:overflow-y-auto transition-all scrollbar-thin scrollbar-track-transparent scrollbar-thumb-violet-200"
@@ -179,8 +256,20 @@ export default function Page({ params }: { params: IParams }) {
                 >
                   <div>{message.text}</div>
                   <div className={"text-xs text-slate-500 text-right"}>
+                    {message.sender.id == currentUser.uid &&
+                    message.lastSeenBy.filter(
+                      (user) => user.id != currentUser.uid
+                    ) &&
+                    message.lastSeenBy?.length > 0 ? (
+                      <Icon
+                        className={"inline mx-2"}
+                        icon="fluent:eye-24-filled"
+                      />
+                    ) : (
+                      ""
+                    )}
                     {message.timestamp &&
-                      getRelativeTime(message.timestamp.toDate())}
+                      getRelativeTime(message.timestamp.toDate().getTime())}
                   </div>
                 </div>
               </div>
