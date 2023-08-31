@@ -11,33 +11,20 @@ import Loading from "@/components/Loading";
 
 export default function Page() {
   const router = useRouter();
-  const [user, userLoading, userError] = useAuthState(auth);
+
+  // const [user, userLoading, userError] = useAuthState(auth);
   const userNameInput = useRef<HTMLInputElement>(null);
 
   const userName = useRef("");
-  const { currentUser, setCurrentUser } = useContext(GlobalContext);
+  const { userSession, userLoading, currentUser, setCurrentUser } =
+    useContext(GlobalContext);
 
   useEffect(() => {
-    if (!user) redirect("/login");
+    if (!userSession) redirect("/login");
     else {
-      userName.current = user?.email?.split("@")[0] ?? "";
-      const currentUserRef = doc(firebasedb, "users", user?.uid as string);
-
-      (async function () {
-        const userData = await getDoc(
-          doc(firebasedb, "users", user?.uid as string)
-        );
-
-        setCurrentUser({
-          uid: userData?.id ?? user?.uid,
-          name: userData?.data()?.name ?? user?.email?.split("@")[0],
-          email: userData?.data()?.email ?? user?.email,
-          firstLogin: userData?.data()?.firstLogin ?? true,
-          ref: currentUserRef,
-        });
-      })();
+      userName.current = userSession?.email?.split("@")[0] ?? "";
     }
-  }, [setCurrentUser, user, userLoading]);
+  }, [setCurrentUser, userSession, userLoading]);
 
   useEffect(() => {
     if (userNameInput.current) userNameInput.current!.value = userName.current;
@@ -46,7 +33,7 @@ export default function Page() {
   async function handleSingUp(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (userName.current === "") return;
-    await setDoc(doc(firebasedb, "users", user?.uid as string), {
+    await setDoc(doc(firebasedb, "users", userSession?.uid as string), {
       name: userName.current,
       email: currentUser?.email,
       firstLogin: false,
@@ -59,9 +46,9 @@ export default function Page() {
     router.push("/chatapp");
   }
 
-  return currentUser.firstLogin == undefined ? (
-    <Loading />
-  ) : currentUser.firstLogin ? (
+  if (!userSession) redirect("/login");
+
+  currentUser.firstLogin ? (
     <div className="flex w-full items-center justify-center h-screen">
       <form
         className="flex flex-col gap-2 bg-violet-500 p-6"

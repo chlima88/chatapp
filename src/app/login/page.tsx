@@ -1,20 +1,29 @@
 "use client";
 
-import { redirect } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useSignInWithGoogle } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/db";
 import { Icon } from "@iconify/react";
+import { useContext } from "react";
+import { GlobalContext } from "@/context/GlobalContext";
 
 export default function Page() {
   const [signInWithGoole, user, loading] = useSignInWithGoogle(auth);
+  const router = useRouter();
+  const { userSession, userLoading, currentUser, setCurrentUser } =
+    useContext(GlobalContext);
 
   async function handleSignIn() {
+    // await setPersistence(auth, browserLocalPersistence);
     await signInWithGoole([], { prompt: "select_account" });
   }
 
-  return user ? (
-    redirect("/cadastro")
-  ) : (
+  if (userSession) {
+    // <div>Login</div>
+    router.push("/cadastro");
+  }
+
+  return (
     <div className="flex w-full items-center justify-center h-screen">
       <div className="flex flex-col gap-4 border-violet-500  p-4 rounded-md">
         <div className="w-full text-center text-2xl text-gray-600 p-4">
