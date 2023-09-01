@@ -31,7 +31,7 @@ export default function ConversationList({ filter }: { filter: string }) {
   const [conversationsData] = useCollection(
     query(
       collection(firebasedb, "conversations"),
-      where("users", "array-contains", currentUser.ref)
+      where("users", "array-contains", currentUser.ref || "")
     )
   );
 

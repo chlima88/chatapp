@@ -76,7 +76,7 @@ export default function Page({ params }: { params: IParams }) {
   const [conversationsData] = useCollection(
     query(
       collection(firebasedb, "conversations"),
-      where("users", "array-contains", currentUser.ref)
+      where("users", "array-contains", currentUser.ref || "")
     )
   );
 
