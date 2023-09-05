@@ -13,13 +13,7 @@ import { firebasedb } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
 import Conversation from "./Conversation";
 import { useContext, useEffect, useState } from "react";
-
-interface IConversation {
-  uid: string;
-  contactRef: DocumentReference<DocumentData>;
-  name: string;
-  email: string;
-}
+import { IConversation } from "@/lib/types";
 
 export default function ConversationList({ filter }: { filter: string }) {
   const { currentUser, conversations, setConversations } =

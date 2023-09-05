@@ -1,6 +1,7 @@
 "use client";
 import Loading from "@/components/Loading";
 import { auth, firebasedb } from "@/lib/db";
+import { IConversation, ICurrentUser } from "@/lib/types";
 import { User } from "firebase/auth";
 import {
   DocumentData,
@@ -17,21 +18,6 @@ import {
   useState,
 } from "react";
 import { useAuthState } from "react-firebase-hooks/auth";
-
-interface ICurrentUser {
-  uid: string;
-  name: string;
-  email: string;
-  firstLogin: boolean;
-  ref: DocumentReference<DocumentData>;
-}
-
-interface IConversation {
-  uid: string;
-  contactRef: DocumentReference<DocumentData>;
-  name: string;
-  email: string;
-}
 
 interface IGlobalContext {
   userSession: User | null | undefined;

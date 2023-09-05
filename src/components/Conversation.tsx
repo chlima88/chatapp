@@ -2,33 +2,14 @@
 import { GlobalContext } from "@/context/GlobalContext";
 import { firebasedb } from "@/lib/db";
 import { Icon } from "@iconify/react";
-import {
-  DocumentData,
-  DocumentReference,
-  Timestamp,
-  collection,
-  orderBy,
-  query,
-} from "firebase/firestore";
+import { DocumentData, collection, orderBy, query } from "firebase/firestore";
 import Link from "next/link";
 import { useContext } from "react";
-import {
-  useCollection,
-  useCollectionData,
-} from "react-firebase-hooks/firestore";
+import { useCollectionData } from "react-firebase-hooks/firestore";
 
 interface IProps {
   displayName: string;
   uid: string;
-}
-
-interface IMessages {
-  id: string;
-  sender: DocumentReference<DocumentData>;
-  timestamp: Timestamp;
-  text: string;
-  unread: boolean;
-  lastSeenBy: DocumentReference<DocumentData>[];
 }
 
 export default function Conversation({ displayName, uid }: IProps) {

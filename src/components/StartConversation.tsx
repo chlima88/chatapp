@@ -19,25 +19,19 @@ import {
 import { useCollection } from "react-firebase-hooks/firestore";
 import { GlobalContext } from "@/context/GlobalContext";
 import { useRouter } from "next/navigation";
+import { IUser } from "@/lib/types";
 
-interface IProps {
+type Props = {
   display: boolean;
   toggle: Dispatch<SetStateAction<boolean>>;
-}
+};
 
-interface IUsers {
-  uid: string;
-  ref: DocumentReference<DocumentData>;
-  name: string;
-  email: string;
-}
-
-export default function StartConversation({ display, toggle }: IProps) {
+export default function StartConversation({ display, toggle }: Props) {
   const router = useRouter();
   const [usersData] = useCollection(collection(firebasedb, "users"));
   const { currentUser, conversations } = useContext(GlobalContext);
   const [searchInput, setSearchInput] = useState("");
-  const [filteredUsers, setFilteredUsers] = useState<IUsers[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<IUser[]>([]);
 
   useEffect(() => {
     const users =
@@ -47,7 +41,7 @@ export default function StartConversation({ display, toggle }: IProps) {
             uid: user.id,
             ref: user.ref,
             ...user.data(),
-          } as unknown as IUsers;
+          } as unknown as IUser;
         })
         .filter((user) => user.uid != currentUser.uid) || [];
 
