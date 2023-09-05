@@ -8,34 +8,17 @@ import {
   query,
   where,
   orderBy,
-  DocumentReference,
-  DocumentData,
   doc,
-  Timestamp,
 } from "firebase/firestore";
 import { firebasedb } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
 import Link from "next/link";
 import { messageService } from "@/services/messageService";
+import MessageBaloon from "@/components/MessageBaloon";
+import { IConversationData, IMessage, IMessageStyle } from "@/lib/types";
 
 type IParams = {
   uid: string;
-};
-
-type IConversationData = {
-  uid: string;
-  participants: string[];
-  created_at: string;
-  users: DocumentReference<DocumentData>[];
-};
-
-type IMessage = {
-  id: string;
-  sender: DocumentReference<DocumentData>;
-  timestamp: Timestamp;
-  text: string;
-  unread: boolean;
-  lastSeenBy: DocumentReference<DocumentData>[];
 };
 
 function useMessages(uid: string): IMessage[] {
@@ -214,23 +197,11 @@ export default function Page({ params }: { params: IParams }) {
     return rtf.format(difference, unit as Intl.RelativeTimeFormatUnit);
   }
 
-  function setAsRead(message: IMessage) {
-    if (
-      message.sender.id == currentUser.uid &&
-      message.lastSeenBy.filter((user) => user.id != currentUser.uid) &&
-      message.lastSeenBy?.length > 0
-    )
-      return <Icon className={"inline mr-2"} icon="fluent:eye-24-filled" />;
-    else {
-      return "";
-    }
-  }
-
   function getMessageStyle(
     message: IMessage,
     messageIndex: number,
     arraySize: number
-  ) {
+  ): IMessageStyle {
     const style =
       message.sender.id === currentUser.uid
         ? { color: "ml-auto bg-violet-200 ", alignment: "pl-8", ref: null }
@@ -259,40 +230,14 @@ export default function Page({ params }: { params: IParams }) {
       >
         <div className="flex flex-col gap-2 ">
           {messages?.map((message, index) => {
-            const messageStyle = getMessageStyle(
-              message,
-              index,
-              messages?.length
-            );
-
             return (
-              <div
-                className={"w-full" + ` ${messageStyle.alignment}`}
-                key={message.id}
-              >
-                <div
-                  className={
-                    "p-2 rounded-md w-fit max-w-2xl " + `${messageStyle.color}`
-                  }
-                  ref={messageStyle.ref}
-                >
-                  <div>{message.text}</div>
-                  <div
-                    className={"text-xs text-slate-500 text-right"}
-                    title={new Intl.DateTimeFormat(["pt-BR"], {
-                      day: "numeric",
-                      month: "numeric",
-                      year: "numeric",
-                      hour: "numeric",
-                      minute: "numeric",
-                    }).format(message.timestamp?.toDate().getTime())}
-                  >
-                    {setAsRead(message)}
-                    {message.timestamp &&
-                      getRelativeTime(message.timestamp.toDate().getTime())}
-                  </div>
-                </div>
-              </div>
+              <>
+                <MessageBaloon
+                  key={message.id}
+                  message={message}
+                  style={getMessageStyle(message, index, messages?.length)}
+                />
+              </>
             );
           })}
         </div>
