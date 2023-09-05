@@ -1,16 +1,10 @@
 "use client";
 import { FormEvent, useContext, useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
-import {
-  useCollectionData,
-  useCollection,
-  useDocumentData,
-} from "react-firebase-hooks/firestore";
+import { useCollection, useDocumentData } from "react-firebase-hooks/firestore";
 import {
   collection,
-  addDoc,
   updateDoc,
-  serverTimestamp,
   query,
   where,
   orderBy,
@@ -22,41 +16,30 @@ import {
 import { firebasedb } from "@/lib/db";
 import { GlobalContext } from "@/context/GlobalContext";
 import Link from "next/link";
+import { messageService } from "@/services/messageService";
 
-interface IParams {
+type IParams = {
   uid: string;
-}
+};
 
-interface IConversationData {
+type IConversationData = {
   uid: string;
   participants: string[];
   created_at: string;
   users: DocumentReference<DocumentData>[];
-}
+};
 
-interface IMessages {
+type IMessage = {
   id: string;
   sender: DocumentReference<DocumentData>;
   timestamp: Timestamp;
   text: string;
   unread: boolean;
   lastSeenBy: DocumentReference<DocumentData>[];
-}
+};
 
-export default function Page({ params }: { params: IParams }) {
+function useMessages(uid: string): IMessage[] {
   const { currentUser } = useContext(GlobalContext);
-  const textInput = useRef<HTMLTextAreaElement>(null);
-  const [contactName, setContactName] = useState("");
-  const lastMessageRef = useRef<HTMLDivElement>(null);
-
-  const { uid } = params;
-
-  // const [messages] = useCollectionData(
-  //   query(
-  //     collection(firebasedb, `conversations/${uid}/messages`),
-  //     orderBy("timestamp")
-  //   )
-  // );
 
   const [messagesData] = useCollection(
     query(
@@ -70,8 +53,57 @@ export default function Page({ params }: { params: IParams }) {
       ({
         id: message.id,
         ...message.data(),
-      } as IMessages)
+      } as IMessage)
   );
+
+  useEffect(() => {
+    messages
+      ?.filter(
+        (message) =>
+          message.unread === false &&
+          message.sender.id != currentUser.uid &&
+          messages.indexOf(message) + 1 < messages.length &&
+          message.lastSeenBy.every((user) => user.id === currentUser.uid)
+      )
+      .forEach((message) => {
+        updateConversationMessage(uid, message.id, { lastSeenBy: [] });
+      });
+
+    messages
+      ?.filter(
+        (message) =>
+          message.unread === true && message.sender.id != currentUser.uid
+      )
+      .forEach((message, index, arr) => {
+        const updatedLastSeenBy =
+          index === arr.length - 1
+            ? [...message.lastSeenBy, currentUser.ref]
+            : message.lastSeenBy;
+
+        updateConversationMessage(uid, message.id, {
+          unread: false,
+          lastSeenBy: updatedLastSeenBy,
+        });
+      });
+  }, [messagesData]);
+
+  function updateConversationMessage(
+    conversationId: string,
+    messageId: string,
+    data: any
+  ) {
+    updateDoc(
+      doc(firebasedb, `conversations/${conversationId}/messages/${messageId}`),
+      data
+    );
+  }
+
+  return messages!;
+}
+
+function useContact(uid: string) {
+  const { currentUser } = useContext(GlobalContext);
+  const [contactName, setContactName] = useState("");
 
   const [conversationsData] = useCollection(
     query(
@@ -100,54 +132,16 @@ export default function Page({ params }: { params: IParams }) {
     setContactName(contact?.name);
   }, [contact]);
 
-  useEffect(() => {
-    lastMessageRef.current?.scrollIntoView();
+  return { contactName };
+}
 
-    // messages?.find(message => message.lastSeenBy.filter((user) => user.id === currentUser.uid))
-  });
-
-  useEffect(() => {
-    messages
-      ?.filter(
-        (message) =>
-          message.unread === false &&
-          message.sender.id != currentUser.uid &&
-          messages.indexOf(message) + 1 < messages.length &&
-          message.lastSeenBy.filter((user) => user.id === currentUser.uid)
-            .length > 0
-      )
-      .map((message) => {
-        message.lastSeenBy.splice(
-          message.lastSeenBy.indexOf(currentUser.ref),
-          1
-        );
-
-        updateDoc(
-          doc(firebasedb, `conversations/${uid}/messages/${message.id}`),
-          {
-            lastSeenBy: [],
-          }
-        );
-      });
-
-    messages
-      ?.filter(
-        (message) =>
-          message.unread === true && message.sender.id != currentUser.uid
-      )
-      .map((message, index, arr) => {
-        updateDoc(
-          doc(firebasedb, `conversations/${uid}/messages/${message.id}`),
-          {
-            unread: !message.unread,
-            lastSeenBy:
-              index === arr.length - 1
-                ? [...message.lastSeenBy, currentUser.ref]
-                : message.lastSeenBy,
-          }
-        );
-      });
-  }, [messagesData]);
+export default function Page({ params }: { params: IParams }) {
+  const { uid } = params;
+  const lastMessageRef = useRef<HTMLDivElement>(null);
+  const textInput = useRef<HTMLTextAreaElement>(null);
+  const messages = useMessages(uid);
+  const { contactName } = useContact(uid);
+  const { currentUser } = useContext(GlobalContext);
 
   useEffect(() => {
     textInput.current?.addEventListener("keydown", (event: KeyboardEvent) => {
@@ -157,6 +151,10 @@ export default function Page({ params }: { params: IParams }) {
       }
     });
   }, []);
+
+  useEffect(() => {
+    lastMessageRef.current?.scrollIntoView();
+  });
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -168,12 +166,10 @@ export default function Page({ params }: { params: IParams }) {
     const text = textInput.current!.value;
     textInput.current!.value = "";
 
-    await addDoc(collection(firebasedb, `conversations/${uid}/messages`), {
-      text: text,
-      sender: currentUser.ref,
-      timestamp: serverTimestamp(),
-      unread: true,
-      lastSeenBy: [],
+    await messageService.send({
+      conversationUid: uid,
+      senderRef: currentUser.ref,
+      text,
     });
   }
 
@@ -218,6 +214,33 @@ export default function Page({ params }: { params: IParams }) {
     return rtf.format(difference, unit as Intl.RelativeTimeFormatUnit);
   }
 
+  function setAsRead(message: IMessage) {
+    if (
+      message.sender.id == currentUser.uid &&
+      message.lastSeenBy.filter((user) => user.id != currentUser.uid) &&
+      message.lastSeenBy?.length > 0
+    )
+      return <Icon className={"inline mr-2"} icon="fluent:eye-24-filled" />;
+    else {
+      return "";
+    }
+  }
+
+  function getMessageStyle(
+    message: IMessage,
+    messageIndex: number,
+    arraySize: number
+  ) {
+    const style =
+      message.sender.id === currentUser.uid
+        ? { color: "ml-auto bg-violet-200 ", alignment: "pl-8", ref: null }
+        : { color: "mr-auto bg-sky-200 ", alignment: "pr-8", ref: null };
+
+    style.ref = messageIndex + 1 == arraySize ? lastMessageRef : (null as any);
+
+    return style;
+  }
+
   return (
     <div className="flex flex-col pl-2 pr-4 py-4 gap-2 h-full">
       <div className="flex gap-5 items-center border-b-[1px] pb-2 h-20">
@@ -236,24 +259,22 @@ export default function Page({ params }: { params: IParams }) {
       >
         <div className="flex flex-col gap-2 ">
           {messages?.map((message, index) => {
+            const messageStyle = getMessageStyle(
+              message,
+              index,
+              messages?.length
+            );
+
             return (
               <div
-                className={
-                  "w-full" +
-                  ` ${message.sender.id === currentUser.uid ? "pl-8" : "pr-8"}`
-                }
+                className={"w-full" + ` ${messageStyle.alignment}`}
                 key={message.id}
               >
                 <div
                   className={
-                    "p-2 rounded-md w-fit max-w-2xl " +
-                    `${
-                      message.sender.id === currentUser.uid
-                        ? "ml-auto bg-violet-200 "
-                        : "mr-auto bg-sky-200 "
-                    }`
+                    "p-2 rounded-md w-fit max-w-2xl " + `${messageStyle.color}`
                   }
-                  ref={index + 1 == messages.length ? lastMessageRef : null}
+                  ref={messageStyle.ref}
                 >
                   <div>{message.text}</div>
                   <div
@@ -266,18 +287,7 @@ export default function Page({ params }: { params: IParams }) {
                       minute: "numeric",
                     }).format(message.timestamp?.toDate().getTime())}
                   >
-                    {message.sender.id == currentUser.uid &&
-                    message.lastSeenBy.filter(
-                      (user) => user.id != currentUser.uid
-                    ) &&
-                    message.lastSeenBy?.length > 0 ? (
-                      <Icon
-                        className={"inline mr-2"}
-                        icon="fluent:eye-24-filled"
-                      />
-                    ) : (
-                      ""
-                    )}
+                    {setAsRead(message)}
                     {message.timestamp &&
                       getRelativeTime(message.timestamp.toDate().getTime())}
                   </div>
